@@ -6,12 +6,12 @@ struct propgen_result{
 	int generate;
 };
 
-class half_adder{
+class initial_propgen{
 	private:
 	
 
 	public:
-		half_adder();
+		initial_propgen();
 
 
 		propgen_result add(int input1, int input2);

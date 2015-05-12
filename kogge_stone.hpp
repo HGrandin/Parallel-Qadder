@@ -1,7 +1,7 @@
 #ifndef KOGGE_STONE_HPP_38432
 #define KOGGE_STONE_HPP_38432
 
-#include "half_adder.hpp"
+#include "initial_propgen.hpp"
 #include "propgen.hpp"
 
 // struct propgen_result{
@@ -14,7 +14,7 @@ class kogge_stone{
 		int width;
 		int height;
 		propgen_result *inter_results;
-		half_adder *hadder;
+		initial_propgen *init_propgen;
 		propgen *propgen_node;
 	
 

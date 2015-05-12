@@ -1,30 +1,30 @@
-#include "half_adder.hpp"
+#include "initial_propgen.hpp"
 #include "propgen.hpp"
 #include "kogge_stone.hpp"
 #include "assert.h"
 #include <stdio.h>
 
-void test_half_adder(){
+void test_initial_propgen(){
 	propgen_result result;
-	half_adder *hadder = new half_adder();
+	initial_propgen *init_propgen = new initial_propgen();
 	
-	result = hadder->add(0,0);
+	result = init_propgen->add(0,0);
 	assert(result.propagate == 0);
 	assert(result.generate == 0);
 
-	result = hadder->add(0,1);
+	result = init_propgen->add(0,1);
 	assert(result.propagate == 1);
 	assert(result.generate == 0);
 
-	result = hadder->add(1,0);
+	result = init_propgen->add(1,0);
 	assert(result.propagate == 1);
 	assert(result.generate == 0);
 
-	result = hadder->add(1,1);
+	result = init_propgen->add(1,1);
 	assert(result.propagate == 0);
 	assert(result.generate == 1);
 
-	delete(hadder);
+	delete(init_propgen);
 	printf("Half adder tests completed succesfully.\n");
 }
 
@@ -56,11 +56,12 @@ void test_kogge_stone(int input1, int input2){
 	int sum = adder->add(input1,input2);
 	assert(sum == input1+input2);
 	// printf("%d + %d = %d\n",input1, input2, sum);
+	delete(adder);
 }
 
 
 int main(int argc, char *argv[]){
-	test_half_adder();
+	test_initial_propgen();
 	test_propgen();
 	test_kogge_stone(atoi(argv[1]), atoi(argv[2]));
 }

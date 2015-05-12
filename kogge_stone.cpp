@@ -7,7 +7,7 @@ kogge_stone::kogge_stone(int size){
 	width = size;
 	height = log2(size);
 	inter_results = new propgen_result[(height+1)*width];
-	hadder = new half_adder();
+	init_propgen = new initial_propgen();
 	propgen_node = new propgen();
 	// printf("height: %d \n", height);
 }
@@ -26,7 +26,7 @@ int kogge_stone::add(int input1, int input2){
 
 		i2_temp = input2/bit_size;
 		i2_temp = i2_temp % 2;
-		inter_results[i] = hadder->add(i1_temp,i2_temp);
+		inter_results[i] = init_propgen->add(i1_temp,i2_temp);
 		bit_size = bit_size*2;
 		
 	}
@@ -63,7 +63,7 @@ int kogge_stone::add(int input1, int input2){
 	sum = sum + inter_results[height*width].propagate;
 	bit_size = 2;
 	for(int i=1; i<width; i++){
-		int XOR = hadder->add(inter_results[i].propagate,
+		int XOR = init_propgen->add(inter_results[i].propagate,
 			inter_results[height*width+i-1].generate).propagate;
 		// printf("Result %d, XOR: %d\n", i, XOR);
 		sum = sum + bit_size * XOR;

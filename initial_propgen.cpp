@@ -1,9 +1,9 @@
-#include "half_adder.hpp"
+#include "initial_propgen.hpp"
 
-half_adder::half_adder(){
+initial_propgen::initial_propgen(){
 }
 
-propgen_result half_adder::add(int input1, int input2){
+propgen_result initial_propgen::add(int input1, int input2){
 	int sum = 0, carry = 0;
 	propgen_result result;
 	if(input1 and input2)
