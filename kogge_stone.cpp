@@ -3,34 +3,77 @@
 #include <stdio.h>
 
 
-kogge_stone::kogge_stone(int size){
-	width = size;
-	height = log2(size);
+kogge_stone::kogge_stone(int binary_size, int quaternary_size){
+	q_width = quaternary_size;
+	b_width = binary_size;
+	width = b_width+q_width;
+	height = log2(width);
+	// printf("height: %d\n", height);
+	sums = new int[width];
 	inter_results = new propgen_result[(height+1)*width];
+
 	init_propgen = new initial_propgen();
 	propgen_node = new propgen();
 	// printf("height: %d \n", height);
 }
 
-int kogge_stone::add(int input1, int input2){
+void kogge_stone::initial_step(int input1, int input2, int start_index, int iterations, int base){
 	//size of the current bit we are adding
-	int bit_size = 1;
+	int bit_size = pow(4,start_index);
 	int i1_temp, i2_temp;
+	initial_propgen_result init_propgen_result;
+	
+	for(int i=start_index; i<iterations+start_index; i++){
+		i1_temp = input1/bit_size;
+		i1_temp = i1_temp % base;
+
+		i2_temp = input2/bit_size;
+		i2_temp = i2_temp % base;
+		init_propgen_result = init_propgen->compute(i1_temp,i2_temp,base);
+		
+		sums[i] = init_propgen_result.sum;
+		inter_results[i].propagate = init_propgen_result.propagate;
+		inter_results[i].generate = init_propgen_result.generate;
+		bit_size = bit_size*base;
+	}
+}
+
+int kogge_stone::summarizing_step(int start_index, int iterations,int base){
+	int partial_sum, sum, bit_size;
+	//special case, first node cant look at the lower bit neighboor for generate
+	if(start_index == 0 and iterations > 0){
+		sum = sums[0];
+		bit_size = base;
+		start_index = 1;
+		iterations = iterations - 1;//fulhack
+	}else{
+		sum = 0;
+		bit_size = pow(4,start_index);
+	}
+	for(int i=start_index; i<iterations+start_index; i++){
+		 partial_sum = init_propgen->compute(sums[i],
+			inter_results[height*width+i-1].generate, base).sum;
+		sum = sum + bit_size * partial_sum;
+		bit_size = bit_size*base;
+	}
+	return sum;
+}
+
+
+int kogge_stone::add(int input1, int input2){
 	propgen_result current,prev;
 	int prev_index;
 	int sum = 0;
 	// The first step  (the rectangles in reference-pic)
-	for(int i=0; i<width; i++){
-		i1_temp = input1/bit_size;
-		i1_temp = i1_temp % 2;
+	initial_step(input1,input2,0,q_width,4);
+	initial_step(input1,input2,q_width,b_width,2);
 
-		i2_temp = input2/bit_size;
-		i2_temp = i2_temp % 2;
-		inter_results[i] = init_propgen->add(i1_temp,i2_temp);
-		bit_size = bit_size*2;
-		
-	}
-	
+	// printf("initial sums:\n");
+	// for(int i=q_width+b_width-1;i>-1;i--){
+	// 	printf("%d ", sums[i]);
+	// }
+	// printf("\n");
+
 	// The intermediate steps (the propagate generate nodes)
 	for(int c=0; c<height; c++){
 		for(int i=0; i<width; i++){
@@ -38,9 +81,8 @@ int kogge_stone::add(int input1, int input2){
 			// The small circle case (watch reference-pic)
 			//we will just forward previous result
 			prev_index = i-(pow(2,c));
-			if(i+1<pow(2,c+1)){
+			if(i<pow(2,c)){
 				inter_results[(c+1)*width+i] = inter_results[c*width+i];
-				// printf("(c:%d, i:%d, Little circle)\n",c,i);
 			}
 			// the big circle case (watch reference-pic)
 			else{
@@ -48,29 +90,41 @@ int kogge_stone::add(int input1, int input2){
 				
 				prev = inter_results[c*width+prev_index];
 				inter_results[(c+1)*width + i] = propgen_node->compute(current,prev);
-				// printf("(c:%d, i:%d, Big circle)\n",c,i);
+				// if(c==0 and i == 4){
+				// 	printf("prev_index: %d\n", prev_index);
+				// 	printf("current propagate: %d, generate: %d\n", current.propagate, current.generate);
+				// 	printf("prev propagate: %d, generate: %d\n", prev.propagate, prev.generate);
+				// 	printf("result propagate: %d, generate: %d\n", propgen_node->compute(current,prev).propagate,propgen_node->compute(current,prev).generate);
+				// }
 			}
-			// if(c==1 and i == 2){
-			// 	printf("prev_index: %d\n", prev_index);
-			// 	printf("current propagate: %d, generate: %d\n", current.propagate, current.generate);
-			// 	printf("prev propagate: %d, generate: %d\n", prev.propagate, prev.generate);
-			// 	printf("result propagate: %d, generate: %d\n", propgen_node->compute(current,prev).propagate,propgen_node->compute(current,prev).generate);
-			// }
 		}
 	}
- 	//The last step (triangles in reference-pic)
+ 	
+	// inter_results[height*width+6].generate = 1;
+ // 	printf("finished generates:\n");
+	// for(int i=q_width+b_width-1;i>-1;i--){
+	// 	printf("%d ", inter_results[height*width+i].generate);
+	// }
+	// printf("\n");
+
  	// Xor the initial propagate of same weight with the calculated generate.
-	sum = sum + inter_results[height*width].propagate;
-	bit_size = 2;
-	for(int i=1; i<width; i++){
-		int XOR = init_propgen->add(inter_results[i].propagate,
-			inter_results[height*width+i-1].generate).propagate;
-		// printf("Result %d, XOR: %d\n", i, XOR);
-		sum = sum + bit_size * XOR;
-		bit_size = bit_size*2;
-	}
+	int qpart,bpart;
+	qpart = summarizing_step(0,q_width,4);
+	bpart = summarizing_step(q_width,b_width,2);
+	sum = qpart + bpart;
 
 
+	// if(sum != input1+input2){
+	// 	printf("qpart: %d\n", qpart);
+	// 	printf("bpart: %d\n\n", bpart);
+	// 	printf("            %d\n", input1);
+	// 	printf("           +%d\n", input2);
+	// 	printf("Real answer:%d\n",input1+input2);
+	// 	printf("got         %d\n",sum);
+	// 	printf("difference  %d\n", input1+input2-sum);
+	// 	printf("dimension   2^%d\n",(int)log(input1+input2));
+	// }
+	
 	// for(int c=0; c<height+1; c++){
 	// 	printf("\nIteration %d:\n", c);
 	// 	for(int i=0; i<width; i++){

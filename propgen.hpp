@@ -1,10 +1,10 @@
 #ifndef PROPGEN_HPP_86384
 #define PROPGEN_HPP_86384
 
-// struct propgen_result{
-// 	int propagate;
-// 	int generate;
-// };
+struct propgen_result{
+	int propagate;
+	int generate;
+};
 
 class propgen{
 	private:

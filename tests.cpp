@@ -3,24 +3,29 @@
 #include "kogge_stone.hpp"
 #include "assert.h"
 #include <stdio.h>
+#include <random>
 
 void test_initial_propgen(){
-	propgen_result result;
+	initial_propgen_result result;
 	initial_propgen *init_propgen = new initial_propgen();
 	
-	result = init_propgen->add(0,0);
+	result = init_propgen->compute(0,0,2);
+	assert(result.sum == 0);
 	assert(result.propagate == 0);
 	assert(result.generate == 0);
 
-	result = init_propgen->add(0,1);
+	result = init_propgen->compute(0,1,2);
+	assert(result.sum == 1);
 	assert(result.propagate == 1);
 	assert(result.generate == 0);
 
-	result = init_propgen->add(1,0);
+	result = init_propgen->compute(1,0,2);
+	assert(result.sum == 1);
 	assert(result.propagate == 1);
 	assert(result.generate == 0);
 
-	result = init_propgen->add(1,1);
+	result = init_propgen->compute(1,1,2);
+	assert(result.sum == 0);
 	assert(result.propagate == 0);
 	assert(result.generate == 1);
 
@@ -52,16 +57,34 @@ void test_propgen(){
 }
 
 void test_kogge_stone(int input1, int input2){
-	kogge_stone *adder = new kogge_stone(32);
-	int sum = adder->add(input1,input2);
-	assert(sum == input1+input2);
-	// printf("%d + %d = %d\n",input1, input2, sum);
+	std::default_random_engine generator(time(0));
+    std::uniform_int_distribution<int> distribution(0, pow(2,31));
+    int i1,i2,sum;
+	kogge_stone *adder = new kogge_stone(8,12);
+	if(input1 == 0 and input2 == 0){
+		for(int i=0; i<1000; i++){
+			i1 = distribution(generator);
+			i2 = distribution(generator);
+			sum = adder->add(i1,i2);
+			if(sum != i1+i2){
+				printf("iteration: %d \n", i);
+			}
+			assert(sum == i1+i2);
+		} 
+	}else{
+		sum = adder->add(input1, input2);
+		assert(sum == input1+input2);
+	}
 	delete(adder);
+	printf("Kogge Stone test completed succesfully\n");
 }
 
 
 int main(int argc, char *argv[]){
 	test_initial_propgen();
 	test_propgen();
-	test_kogge_stone(atoi(argv[1]), atoi(argv[2]));
+	if(argc>2)
+		test_kogge_stone(atoi(argv[1]), atoi(argv[2]));
+	else
+		test_kogge_stone(0,0);
 }

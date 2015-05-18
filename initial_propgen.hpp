@@ -1,7 +1,8 @@
-#ifndef HALF_ADDER_HPP_67378
-#define HALF_ADDER_HPP_67378
+#ifndef INITIAL_PROPGEN_HPP_67378
+#define INITIAL_PROPGEN_HPP_67378
 
-struct propgen_result{
+struct initial_propgen_result{
+	int sum;
 	int propagate;
 	int generate;
 };
@@ -13,8 +14,8 @@ class initial_propgen{
 	public:
 		initial_propgen();
 
-
-		propgen_result add(int input1, int input2);
+		//base tells us if its binary or quaternary.
+		initial_propgen_result compute(int input1, int input2, int base);
 };
 
-#endif /* end of include guard: HALF_ADDER_HPP_67378 */
+#endif /* end of include guard: INITIAL_PROPGEN_HPP_67378 */
