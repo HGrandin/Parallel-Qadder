@@ -11,11 +11,11 @@ initial_propgen_result initial_propgen::compute(int input1, int input2, int base
 	result.propagate = 0;
 	result.generate = 0;
 	if(base == 2){
-		if((input1 and !input2) or (!input1 and input2)){
-			result.sum = 1;
+		result.sum = (input1 + input2) % 4;
+		if((input1 + input2) == 2){
 			result.propagate = 1;
 		}
-		if(input1 and input2){
+		if((input1 + input2) > 3){
 			result.generate = 1;
 		}
 	}

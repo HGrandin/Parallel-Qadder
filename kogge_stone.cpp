@@ -7,7 +7,7 @@ kogge_stone::kogge_stone(int binary_size, int quaternary_size){
 	q_width = quaternary_size;
 	b_width = binary_size;
 	width = b_width+q_width;
-	height = log2(width);
+	height = ceil(log2(width));
 	// printf("height: %d\n", height);
 	sums = new int[width];
 	inter_results = new propgen_result[(height+1)*width];
@@ -29,6 +29,11 @@ void kogge_stone::initial_step(int input1, int input2, int start_index, int iter
 
 		i2_temp = input2/bit_size;
 		i2_temp = i2_temp % base;
+
+		if(base == 2){
+			i1_temp = i1_temp*2;
+			i2_temp = i2_temp*2;
+		}
 		init_propgen_result = init_propgen->compute(i1_temp,i2_temp,base);
 		
 		sums[i] = init_propgen_result.sum;
@@ -42,6 +47,9 @@ int kogge_stone::summarizing_step(int start_index, int iterations,int base){
 	int partial_sum, sum, bit_size;
 	//special case, first node cant look at the lower bit neighboor for generate
 	if(start_index == 0 and iterations > 0){
+		if(base == 2){
+			sums[0] = sums[0]/2;
+		}
 		sum = sums[0];
 		bit_size = base;
 		start_index = 1;
@@ -51,8 +59,15 @@ int kogge_stone::summarizing_step(int start_index, int iterations,int base){
 		bit_size = pow(4,start_index);
 	}
 	for(int i=start_index; i<iterations+start_index; i++){
-		 partial_sum = init_propgen->compute(sums[i],
-			inter_results[height*width+i-1].generate, base).sum;
+		 int gen = inter_results[height*width+i-1].generate;
+		 if(base == 2){
+		 	gen = gen*2;
+		 }
+		partial_sum = init_propgen->compute(sums[i], gen, base).sum;
+
+		if(base == 2){
+			partial_sum = partial_sum/2;
+		}
 		sum = sum + bit_size * partial_sum;
 		bit_size = bit_size*base;
 	}
@@ -63,16 +78,10 @@ int kogge_stone::summarizing_step(int start_index, int iterations,int base){
 int kogge_stone::add(int input1, int input2){
 	propgen_result current,prev;
 	int prev_index;
-	int sum = 0;
+	long sum = 0;
 	// The first step  (the rectangles in reference-pic)
 	initial_step(input1,input2,0,q_width,4);
 	initial_step(input1,input2,q_width,b_width,2);
-
-	// printf("initial sums:\n");
-	// for(int i=q_width+b_width-1;i>-1;i--){
-	// 	printf("%d ", sums[i]);
-	// }
-	// printf("\n");
 
 	// The intermediate steps (the propagate generate nodes)
 	for(int c=0; c<height; c++){
@@ -90,22 +99,10 @@ int kogge_stone::add(int input1, int input2){
 				
 				prev = inter_results[c*width+prev_index];
 				inter_results[(c+1)*width + i] = propgen_node->compute(current,prev);
-				// if(c==0 and i == 4){
-				// 	printf("prev_index: %d\n", prev_index);
-				// 	printf("current propagate: %d, generate: %d\n", current.propagate, current.generate);
-				// 	printf("prev propagate: %d, generate: %d\n", prev.propagate, prev.generate);
-				// 	printf("result propagate: %d, generate: %d\n", propgen_node->compute(current,prev).propagate,propgen_node->compute(current,prev).generate);
-				// }
 			}
 		}
 	}
  	
-	// inter_results[height*width+6].generate = 1;
- // 	printf("finished generates:\n");
-	// for(int i=q_width+b_width-1;i>-1;i--){
-	// 	printf("%d ", inter_results[height*width+i].generate);
-	// }
-	// printf("\n");
 
  	// Xor the initial propagate of same weight with the calculated generate.
 	int qpart,bpart;
@@ -113,23 +110,22 @@ int kogge_stone::add(int input1, int input2){
 	bpart = summarizing_step(q_width,b_width,2);
 	sum = qpart + bpart;
 
-
+	//DEBUGGING
 	// if(sum != input1+input2){
 	// 	printf("qpart: %d\n", qpart);
 	// 	printf("bpart: %d\n\n", bpart);
 	// 	printf("            %d\n", input1);
 	// 	printf("           +%d\n", input2);
 	// 	printf("Real answer:%d\n",input1+input2);
-	// 	printf("got         %d\n",sum);
-	// 	printf("difference  %d\n", input1+input2-sum);
+	// 	printf("got         %ld\n",sum);
+	// 	printf("difference  %ld\n", sum-(input1+input2));
 	// 	printf("dimension   2^%d\n",(int)log(input1+input2));
 	// }
-	
-	// for(int c=0; c<height+1; c++){
-	// 	printf("\nIteration %d:\n", c);
-	// 	for(int i=0; i<width; i++){
-	// 		printf("Inter results %d, propagate: %d, generate: %d\n", i, inter_results[c*width+i].propagate, inter_results[c*width+i].generate);
-	// 	}
+
+	// int row=3;
+	// printf("printing row %d\n", row);
+	// for(int i=width-1; i>-1;i--){
+	// 	printf("cell %d: g=%d, p=%d \n", i, inter_results[row*width+i].generate, inter_results[row*width+i].propagate);
 	// }
 	return sum;
 }

@@ -14,17 +14,17 @@ void test_initial_propgen(){
 	assert(result.propagate == 0);
 	assert(result.generate == 0);
 
-	result = init_propgen->compute(0,1,2);
-	assert(result.sum == 1);
+	result = init_propgen->compute(0,2,2);
+	assert(result.sum == 2);
 	assert(result.propagate == 1);
 	assert(result.generate == 0);
 
-	result = init_propgen->compute(1,0,2);
-	assert(result.sum == 1);
+	result = init_propgen->compute(2,0,2);
+	assert(result.sum == 2);
 	assert(result.propagate == 1);
 	assert(result.generate == 0);
 
-	result = init_propgen->compute(1,1,2);
+	result = init_propgen->compute(2,2,2);
 	assert(result.sum == 0);
 	assert(result.propagate == 0);
 	assert(result.generate == 1);
@@ -60,19 +60,17 @@ void test_kogge_stone(int input1, int input2){
 	std::default_random_engine generator(time(0));
     std::uniform_int_distribution<int> distribution(0, pow(2,31));
     int i1,i2,sum;
-	kogge_stone *adder = new kogge_stone(8,12);
+	kogge_stone *adder = new kogge_stone(16,8);
 	if(input1 == 0 and input2 == 0){
-		for(int i=0; i<1000; i++){
+		for(int i=0; i<1000000; i++){
 			i1 = distribution(generator);
 			i2 = distribution(generator);
 			sum = adder->add(i1,i2);
-			if(sum != i1+i2){
-				printf("iteration: %d \n", i);
-			}
 			assert(sum == i1+i2);
 		} 
 	}else{
 		sum = adder->add(input1, input2);
+		printf("sum %d \n", sum);
 		assert(sum == input1+input2);
 	}
 	delete(adder);
