@@ -5,9 +5,34 @@
 #include <stdio.h>
 #include <random>
 
+//only used in test_kogge_errors
+#define Q_WIDTH				(8)
+#define B_WIDTH				(16)
+#define FILE_NAME "kogge_errors_16.csv"
+#define JSON_NAME "kogge_errors_16.json"
+
+//only used in make_error_model
+#define ITERATIONS (100000)
+
+//used in both test_kogge_errors and make_error_model
+#define Q_PROP_ERROR		(200)
+#define Q_GEN_ERROR			(200)
+#define Q_SUM_ERROR			(100)
+#define Q_INPUT_ERROR	 	(100)
+#define Q_STABLE_MULT		(1)
+#define B_PROP_ERROR		(10000)
+#define B_GEN_ERROR			(10000)
+#define B_SUM_ERROR			(10000)
+#define B_INPUT_ERROR		(10000)
+#define INPUT_SIZE			(31)
+
+
+
 void test_initial_propgen(){
 	initial_propgen_result result;
-	initial_propgen *init_propgen = new initial_propgen();
+	error_rates ber = {};
+    error_rates qer = {};
+	initial_propgen *init_propgen = new initial_propgen(ber,qer);
 	
 	result = init_propgen->compute(0,0,2);
 	assert(result.sum == 0);
@@ -56,13 +81,16 @@ void test_propgen(){
 	printf("Propgen tests completed succesfully.\n");
 }
 
-void test_kogge_stone(int input1, int input2){
+void test_kogge_stone(int input1, int input2,int mode){
 	std::default_random_engine generator(time(0));
     std::uniform_int_distribution<int> distribution(0, pow(2,31));
     int i1,i2,sum;
-	kogge_stone *adder = new kogge_stone(16,8);
-	if(input1 == 0 and input2 == 0){
-		for(int i=0; i<1000000; i++){
+    error_rates ber = {};
+    error_rates qer = {};
+
+	kogge_stone *adder = new kogge_stone(16,8,ber,qer);
+	if(mode==0){
+		for(int i=0; i<10000; i++){
 			i1 = distribution(generator);
 			i2 = distribution(generator);
 			sum = adder->add(i1,i2);
@@ -77,12 +105,139 @@ void test_kogge_stone(int input1, int input2){
 	printf("Kogge Stone test completed succesfully\n");
 }
 
+void test_kogge_error(){
+	std::default_random_engine generator(time(0));
+    std::uniform_int_distribution<int> distribution(0, pow(2,INPUT_SIZE));
+    int i1,i2,sum,adds = 0,errors = 0;
+    error_rates ber = {};
+    error_rates qer = {};
+    
+    qer.propagate_error = Q_PROP_ERROR;
+    qer.generate_error = Q_GEN_ERROR;
+    qer.sum_error = Q_SUM_ERROR;
+    qer.input_error = Q_INPUT_ERROR;
+    qer.stable_multiplier = Q_STABLE_MULT;
+
+    ber.propagate_error = B_PROP_ERROR;
+    ber.generate_error = B_GEN_ERROR;
+    ber.sum_error = B_SUM_ERROR;
+    ber.input_error = B_INPUT_ERROR;
+
+	kogge_stone *adder = new kogge_stone(B_WIDTH,Q_WIDTH,ber,qer);
+	int i = 0;
+	while(true){
+		i1 = distribution(generator);
+		i2 = distribution(generator);
+		sum = adder->add(i1,i2);
+		i++;
+		if(i>=1000000){
+			adder->print_stats(FILE_NAME, INPUT_SIZE, 2);
+			adder->make_json_file(JSON_NAME);
+			i=0;
+		}
+	} 
+	
+	
+	delete(adder);
+}
+
+//100k iterations for each takes roughly 30-35 seconds
+void make_error_model(){
+	std::default_random_engine generator(time(0));
+    std::uniform_int_distribution<int> distribution(0, pow(2,INPUT_SIZE));
+    int i1,i2,sum,adds = 0,errors = 0;
+    error_rates ber = {};
+    error_rates qer = {};
+    
+    qer.propagate_error = Q_PROP_ERROR;
+    qer.generate_error = Q_GEN_ERROR;
+    qer.sum_error = Q_SUM_ERROR;
+    qer.input_error = Q_INPUT_ERROR;
+    qer.stable_multiplier = Q_STABLE_MULT;
+
+    ber.propagate_error = B_PROP_ERROR;
+    ber.generate_error = B_GEN_ERROR;
+    ber.sum_error = B_SUM_ERROR;
+    ber.input_error = B_INPUT_ERROR;
+
+	kogge_stone *b_adder = new kogge_stone(32,0,ber,qer);
+	kogge_stone *q_adder = new kogge_stone(0,16,ber,qer);
+	kogge_stone *q8_adder = new kogge_stone(24,4,ber,qer);
+	kogge_stone *q16_adder = new kogge_stone(16,8,ber,qer);
+	kogge_stone *q24_adder = new kogge_stone(8,12,ber,qer);
+
+	for(int i=0;i<ITERATIONS;i++){
+		i1 = distribution(generator);
+		i2 = distribution(generator);
+		sum = b_adder->add(i1,i2);
+	}
+	b_adder->print_stats("error_model/binary.csv", INPUT_SIZE, 2);
+	b_adder->make_json_file("error_model/binary.json");
+
+	for(int i=0;i<ITERATIONS;i++){
+		i1 = distribution(generator);
+		i2 = distribution(generator);
+		sum = q_adder->add(i1,i2);
+	}
+	q_adder->print_stats("error_model/quaternary.csv", INPUT_SIZE, 2);
+	q_adder->make_json_file("error_model/quaternary.json");
+
+	for(int i=0;i<ITERATIONS;i++){
+		i1 = distribution(generator);
+		i2 = distribution(generator);
+		sum = q8_adder->add(i1,i2);
+	}
+	q8_adder->print_stats("error_model/quaternary8.csv", INPUT_SIZE, 2);
+	q8_adder->make_json_file("error_model/quaternary8.json");
+
+	for(int i=0;i<ITERATIONS;i++){
+		i1 = distribution(generator);
+		i2 = distribution(generator);
+		sum = q16_adder->add(i1,i2);
+	}
+	q16_adder->print_stats("error_model/quaternary16.csv", INPUT_SIZE, 2);
+	q16_adder->make_json_file("error_model/quaternary16.json");
+
+	for(int i=0;i<ITERATIONS;i++){
+		i1 = distribution(generator);
+		i2 = distribution(generator);
+		sum = q24_adder->add(i1,i2);
+	}
+	q24_adder->print_stats("error_model/quaternary24.csv", INPUT_SIZE, 2);
+	q24_adder->make_json_file("error_model/quaternary24.json");
+	
+	delete(b_adder);
+	delete(q_adder);
+	delete(q8_adder);
+	delete(q16_adder);
+	delete(q24_adder);
+}
+
+
 
 int main(int argc, char *argv[]){
 	test_initial_propgen();
 	test_propgen();
 	if(argc>2)
-		test_kogge_stone(atoi(argv[1]), atoi(argv[2]));
+		test_kogge_stone(atoi(argv[1]), atoi(argv[2]), 1);
 	else
-		test_kogge_stone(0,0);
+		test_kogge_stone(0,0,0);
+	//test_kogge_error();
+	 make_error_model();
+
+
+
+	//testings
+	// int t1=1,t2=1;
+	// t1 = t1 << 31;
+	// unsigned int sum = 0;
+	// // t2 = t2 << 31;
+	// t2 = t2+123;
+	// printf("t1: %d\n", t1);
+	// printf("t2: %d\n", t2);
+	// if(t1>t2)
+	// 	sum =(unsigned int)t1 - (unsigned int)t2;
+	// else
+	// 	sum =(unsigned int)t2 - (unsigned int)t1;
+	// printf("dif: %u\n", sum);
 }
