@@ -36,13 +36,13 @@ class kogge_stone{
 		long long int nr_of_adds;
 
 		//The initial addition/propagation/generate step (the rectangles in reference-pic)
-		void initial_step(int input1, int input2, int start_index, int iterations,int base);
+		void initial_step(unsigned int input1, unsigned int input2, int start_index, int iterations,int base);
 		
 		//The last step (triangles in reference-pic)
 		int summarizing_step(int start_index, int iterations,int base);
 
 		//compare results of the kogge stone with actual addition, store statistics.
-		void compare_results(int input1, int input2);
+		void compare_results(unsigned int input1,unsigned int input2);
 
 	public:
 		// binary_size is the number of binary adder nodes 
@@ -50,7 +50,9 @@ class kogge_stone{
 		// The span of quaternary+binary bits may not be bigger than 2^32
 		kogge_stone(int binary_size, int quaternary_size, error_rates b_errors, error_rates q_errors);
 		
-		int add(int input1, int input2);
+		unsigned int add(unsigned int input1, unsigned int input2);
+
+		unsigned int ones_complement(unsigned int input);
 
 		//prints statistics of the adder,
 		//depending on mode, stats will be written to either terminal, file or both

@@ -43,10 +43,10 @@ kogge_stone::kogge_stone(int b_size, int q_size, error_rates b_errors, error_rat
 	incorrect_adds=0;
 }
 
-void kogge_stone::initial_step(int input1, int input2, int start_index, int iterations, int base){
+void kogge_stone::initial_step(unsigned int input1, unsigned int input2, int start_index, int iterations, int base){
 	//size of the current bit we are adding
 	int bit_size = pow(4,start_index);
-	int i1_temp, i2_temp;
+	unsigned int i1_temp, i2_temp;
 	initial_propgen_result init_propgen_result;
 	
 	for(int i=start_index; i<iterations+start_index; i++){
@@ -70,7 +70,7 @@ void kogge_stone::initial_step(int input1, int input2, int start_index, int iter
 }
 
 int kogge_stone::summarizing_step(int start_index, int iterations,int base){
-	int partial_sum, sum, bit_size;
+	unsigned int partial_sum, sum, bit_size;
 	//special case, first node cant look at the lower bit neighboor for generate
 	if(start_index == 0 and iterations > 0){
 		if(base == 2){
@@ -100,10 +100,10 @@ int kogge_stone::summarizing_step(int start_index, int iterations,int base){
 	return sum;
 }
 
-int kogge_stone::add(int input1, int input2){
+unsigned int kogge_stone::add(unsigned int input1, unsigned int input2){
 	propgen_result current,prev;
 	int prev_index;
-	long sum = 0;
+	unsigned int sum = 0;
 	// The first step  (the rectangles in reference-pic)
 	initial_step(input1,input2,0,q_width,4);
 	initial_step(input1,input2,q_width,b_width,2);
@@ -130,7 +130,7 @@ int kogge_stone::add(int input1, int input2){
  	
 
  	// Xor the initial propagate of same weight with the calculated generate.
-	int qpart,bpart;
+	unsigned int qpart,bpart;
 	qpart = summarizing_step(0,q_width,4);
 	bpart = summarizing_step(q_width,b_width,2);
 	sum = qpart + bpart;
@@ -158,7 +158,37 @@ int kogge_stone::add(int input1, int input2){
 	return sum;
 }
 
-void kogge_stone::compare_results(int input1, int input2){
+unsigned int kogge_stone::ones_complement(unsigned int input){
+	//size of the current bit we are adding
+	int bit_size = 1;
+	unsigned int i_temp;
+	int result = 0, partial_result = 0;
+	
+	for(int i=0; i<q_width; i++){
+		i_temp = input/bit_size;
+		i_temp = i_temp % 4;
+
+		result = result + bit_size*init_propgen->q_add_variable_noise(i_temp,qer.ones_complement_error,qer.one_two_prob);
+		bit_size = bit_size << 2;
+	}
+	for(int i=0;i<b_width;i++){
+		i_temp = input/bit_size;
+		i_temp = i_temp % 2;
+		 i_temp = i_temp<<1;
+
+		partial_result = init_propgen->b_add_variable_noise(i_temp,ber.ones_complement_error);
+		partial_result = partial_result>>1;
+		partial_result = bit_size*partial_result;
+		result = result + partial_result;
+		bit_size = bit_size << 1;
+	}
+	result = ~result+1;
+	input = ~input+1;
+	compare_results(result,input);
+	return result;
+}
+
+void kogge_stone::compare_results(unsigned int input1, unsigned int input2){
 	int i1_temp, i2_temp, starting_bit=1;
 	unsigned long error_size = 0;
 	nr_of_adds++;

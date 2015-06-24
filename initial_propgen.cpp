@@ -44,8 +44,8 @@ initial_propgen_result initial_propgen::compute(int input1, int input2, int base
 	else if(base == 4){
 		//input errors
 		if(qer.input_error != disabled){
-			input1 = q_add_variable_noise(input1, qer.input_error);
-			input2 = q_add_variable_noise(input2, qer.input_error);
+			input1 = q_add_variable_noise(input1, qer.input_error, qer.one_two_prob);
+			input2 = q_add_variable_noise(input2, qer.input_error, qer.one_two_prob);
 		}
 
 		//Results
@@ -59,7 +59,7 @@ initial_propgen_result initial_propgen::compute(int input1, int input2, int base
 
 		//circuit errors
 		if(qer.sum_error != disabled){
-			result.sum = q_add_variable_noise(result.sum, qer.sum_error);
+			result.sum = q_add_variable_noise(result.sum, qer.sum_error, qer.one_two_prob);
 		}
 		if(qer.propagate_error != disabled){
 			result.propagate = add_propgen_noise(result.propagate, qer.propagate_error);
@@ -77,10 +77,10 @@ initial_propgen_result initial_propgen::compute(int input1, int input2, int base
 	return result;
 }
 
-int initial_propgen::q_add_variable_noise(int input, int error_prob){
+int initial_propgen::q_add_variable_noise(int input, int error_prob, int o_t_prob){
 	std::uniform_int_distribution<int> error_distribution(1, error_prob);
 	std::uniform_int_distribution<int> stable_distribution(1, qer.stable_multiplier);
-	std::uniform_int_distribution<int> fifty_fifty(1, 2);
+	std::uniform_int_distribution<int> one_two_prob(1, o_t_prob);
 
 	if(error_distribution(generator) == 1){
 		switch(input){
@@ -94,17 +94,25 @@ int initial_propgen::q_add_variable_noise(int input, int error_prob){
 					input--;
 				}
 				break;
-			default :
-				if(input != 1 and input != 2){
-					printf("Error: In initial_propgen::q_add_variable_noise, case that should never happen.\n");
-					assert(false);
-				}
-				if(fifty_fifty(generator) == 1){
+			case 1 :
+				if(one_two_prob(generator) == 1){
 					input++;
 				}
 				else{
 					input--;
 				}
+				break;
+			case 2 :
+				if(one_two_prob(generator) == 1){
+					input--;
+				}
+				else{
+					input++;
+				}
+				break;
+			default :
+				printf("Error: In initial_propgen::q_add_variable_noise, case that should never happen.\n");
+				assert(false);
 				break;
 		}
 	}

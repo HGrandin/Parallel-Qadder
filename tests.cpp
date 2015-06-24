@@ -12,18 +12,19 @@
 #define JSON_NAME "kogge_errors_16.json"
 
 //only used in make_error_model
-#define ITERATIONS (100000)
+#define ITERATIONS (100000000)
 
 //used in both test_kogge_errors and make_error_model
-#define Q_PROP_ERROR		(200)
-#define Q_GEN_ERROR			(200)
-#define Q_SUM_ERROR			(100)
-#define Q_INPUT_ERROR	 	(100)
+#define Q_PROP_ERROR		(20000000)
+#define Q_GEN_ERROR			(20000000)
+#define Q_SUM_ERROR			(10000000)
+#define Q_INPUT_ERROR	 	(10000000)
+#define B_PROP_ERROR		(1000000000)
+#define B_GEN_ERROR			(1000000000)
+#define B_SUM_ERROR			(1000000000)
+#define B_INPUT_ERROR		(1000000000)
 #define Q_STABLE_MULT		(1)
-#define B_PROP_ERROR		(10000)
-#define B_GEN_ERROR			(10000)
-#define B_SUM_ERROR			(10000)
-#define B_INPUT_ERROR		(10000)
+#define Q_ONE_TWO_PROB		(4)
 #define INPUT_SIZE			(31)
 
 
@@ -84,7 +85,7 @@ void test_propgen(){
 void test_kogge_stone(int input1, int input2,int mode){
 	std::default_random_engine generator(time(0));
     std::uniform_int_distribution<int> distribution(0, pow(2,31));
-    int i1,i2,sum;
+    unsigned int i1,i2,sum, minus;
     error_rates ber = {};
     error_rates qer = {};
 
@@ -95,20 +96,26 @@ void test_kogge_stone(int input1, int input2,int mode){
 			i2 = distribution(generator);
 			sum = adder->add(i1,i2);
 			assert(sum == i1+i2);
+			minus = adder->ones_complement(i1);
+			if((int)minus != -i1)
+				printf("minus: %d, -i1: %d\n", (int)minus, -i1);
+			assert((int)minus == -i1);
 		} 
+		printf("Kogge Stone test completed succesfully (autotest)\n");
 	}else{
 		sum = adder->add(input1, input2);
 		printf("sum %d \n", sum);
 		assert(sum == input1+input2);
+		printf("Kogge Stone test completed succesfully (manual test)\n");
 	}
 	delete(adder);
-	printf("Kogge Stone test completed succesfully\n");
+	
 }
 
 void test_kogge_error(){
 	std::default_random_engine generator(time(0));
     std::uniform_int_distribution<int> distribution(0, pow(2,INPUT_SIZE));
-    int i1,i2,sum,adds = 0,errors = 0;
+    unsigned int i1,i2,sum,adds = 0,errors = 0;
     error_rates ber = {};
     error_rates qer = {};
     
@@ -117,6 +124,7 @@ void test_kogge_error(){
     qer.sum_error = Q_SUM_ERROR;
     qer.input_error = Q_INPUT_ERROR;
     qer.stable_multiplier = Q_STABLE_MULT;
+    qer.one_two_prob = Q_ONE_TWO_PROB;
 
     ber.propagate_error = B_PROP_ERROR;
     ber.generate_error = B_GEN_ERROR;
@@ -145,7 +153,7 @@ void test_kogge_error(){
 void make_error_model(){
 	std::default_random_engine generator(time(0));
     std::uniform_int_distribution<int> distribution(0, pow(2,INPUT_SIZE));
-    int i1,i2,sum,adds = 0,errors = 0;
+    unsigned int i1,i2,sum,adds = 0,errors = 0;
     error_rates ber = {};
     error_rates qer = {};
     
@@ -154,6 +162,7 @@ void make_error_model(){
     qer.sum_error = Q_SUM_ERROR;
     qer.input_error = Q_INPUT_ERROR;
     qer.stable_multiplier = Q_STABLE_MULT;
+    qer.one_two_prob = Q_ONE_TWO_PROB;
 
     ber.propagate_error = B_PROP_ERROR;
     ber.generate_error = B_GEN_ERROR;
@@ -165,6 +174,12 @@ void make_error_model(){
 	kogge_stone *q8_adder = new kogge_stone(24,4,ber,qer);
 	kogge_stone *q16_adder = new kogge_stone(16,8,ber,qer);
 	kogge_stone *q24_adder = new kogge_stone(8,12,ber,qer);
+	kogge_stone *b_sub = new kogge_stone(32,0,ber,qer);
+	kogge_stone *q_sub = new kogge_stone(0,16,ber,qer);
+	kogge_stone *q8_sub = new kogge_stone(24,4,ber,qer);
+	kogge_stone *q16_sub = new kogge_stone(16,8,ber,qer);
+	kogge_stone *q24_sub = new kogge_stone(8,12,ber,qer);
+
 
 	for(int i=0;i<ITERATIONS;i++){
 		i1 = distribution(generator);
@@ -205,12 +220,55 @@ void make_error_model(){
 	}
 	q24_adder->print_stats("error_model/quaternary24.csv", INPUT_SIZE, 2);
 	q24_adder->make_json_file("error_model/quaternary24.json");
+
+	//ones complement stats.
+
+	for(int i=0;i<ITERATIONS;i++){
+		i1 = distribution(generator);
+		sum = b_sub->ones_complement(i1);
+	}
+	b_sub->print_stats("error_model/binary_sub.csv", INPUT_SIZE, 2);
+	b_sub->make_json_file("error_model/binary_sub.json");
+
+	for(int i=0;i<ITERATIONS;i++){
+		i1 = distribution(generator);
+		sum = q_sub->ones_complement(i1);
+	}
+	q_sub->print_stats("error_model/quaternary_sub.csv", INPUT_SIZE, 2);
+	q_sub->make_json_file("error_model/quaternary_sub.json");
+
+	for(int i=0;i<ITERATIONS;i++){
+		i1 = distribution(generator);
+		sum = q8_sub->ones_complement(i1);
+	}
+	q8_sub->print_stats("error_model/quaternary8_sub.csv", INPUT_SIZE, 2);
+	q8_sub->make_json_file("error_model/quaternary8_sub.json");
+
+	for(int i=0;i<ITERATIONS;i++){
+		i1 = distribution(generator);
+		sum = q16_sub->ones_complement(i1);
+	}
+	q16_sub->print_stats("error_model/quaternary16_sub.csv", INPUT_SIZE, 2);
+	q16_sub->make_json_file("error_model/quaternary16_sub.json");
+
+	for(int i=0;i<ITERATIONS;i++){
+		i1 = distribution(generator);
+		sum = q24_sub->ones_complement(i1);
+	}
+	q24_sub->print_stats("error_model/quaternary24_sub.csv", INPUT_SIZE, 2);
+	q24_sub->make_json_file("error_model/quaternary24_sub.json");
+
 	
 	delete(b_adder);
 	delete(q_adder);
 	delete(q8_adder);
 	delete(q16_adder);
 	delete(q24_adder);
+	delete(b_sub);
+	delete(q_sub);
+	delete(q8_sub);
+	delete(q16_sub);
+	delete(q24_sub);
 }
 
 
