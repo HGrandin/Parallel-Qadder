@@ -21,13 +21,13 @@ struct initial_propgen_result{
 // propagate and generate does not add errors in the propagate tree as that is "true" binary
 // it is only for the initial propagate/generate from our quaternary/binary(ish) circuit
 struct error_rates{
-	int propagate_error;
-	int generate_error;
-	int sum_error;
-	int ones_complement_error;
-	int input_error;
-	int stable_multiplier;
-	int one_two_prob;
+	long propagate_error;
+	long generate_error;
+	long sum_error;
+	long ones_complement_error;
+	long input_error;
+	long stable_multiplier;
+	long one_two_prob;
 };
 
 class initial_propgen{
@@ -38,15 +38,15 @@ class initial_propgen{
 		std::default_random_engine generator;
 
 		
-		int add_propgen_noise(int input, int error_prob);
+		int add_propgen_noise(int input, long error_prob);
 		int disabled = 0;
 
 
 	public:
 		initial_propgen(error_rates b_errors, error_rates q_errors);
 
-		int q_add_variable_noise(int input, int error_prob, int one_two_prob);
-		int b_add_variable_noise(int input, int error_prob);
+		int q_add_variable_noise(int input, long error_prob, int one_two_prob);
+		int b_add_variable_noise(int input, long error_prob);
 
 		//base tells us if its binary or quaternary.
 		initial_propgen_result compute(int input1, int input2, int base);

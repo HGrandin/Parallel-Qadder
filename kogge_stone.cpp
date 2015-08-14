@@ -189,7 +189,7 @@ unsigned int kogge_stone::ones_complement(unsigned int input){
 }
 
 void kogge_stone::compare_results(unsigned int input1, unsigned int input2){
-	int i1_temp, i2_temp, starting_bit=1;
+	unsigned int i1_temp, i2_temp, starting_bit=1;
 	unsigned long error_size = 0;
 	nr_of_adds++;
 	if(input1 != input2){
@@ -242,7 +242,7 @@ void kogge_stone::compare_results(unsigned int input1, unsigned int input2){
 		}
 		//bitwise error size counter
 		starting_bit = 1;
-		int error_temp;
+		unsigned int error_temp;
 		for(int i = 0; i <32;i++){
 			error_temp = error_size/starting_bit;
 			error_temp = error_temp % 2;
@@ -306,16 +306,16 @@ void kogge_stone::print_stats(std::string file, int input_size, int mode){
 		printf("Q_width: %d\n", q_width);
 		printf("B_width: %d\n", b_width);
 		
-		printf("Q Propagate Error: 1 in %d \n", qer.propagate_error);
-		printf("Q Generate Error: 1 in %d \n", qer.generate_error);
-		printf("Q Sum Error: 1 in %d \n", qer.sum_error);
-		printf("Q Input Error: 1 in %d \n", qer.input_error);
-		printf("Q Stable multiplier: %d \n", qer.stable_multiplier);
+		printf("Q Propagate Error: 1 in %ld \n", qer.propagate_error);
+		printf("Q Generate Error: 1 in %ld \n", qer.generate_error);
+		printf("Q Sum Error: 1 in %ld \n", qer.sum_error);
+		printf("Q Input Error: 1 in %ld \n", qer.input_error);
+		printf("Q Stable multiplier: %ld \n", qer.stable_multiplier);
 		
-		printf("B Propagate Error: 1 in %d \n", ber.propagate_error);
-		printf("B Generate Error: 1 in %d \n", ber.generate_error);
-		printf("B Sum Error: 1 in %d \n", ber.sum_error);
-		printf("B Input Error: 1 in %d \n", ber.input_error);
+		printf("B Propagate Error: 1 in %ld \n", ber.propagate_error);
+		printf("B Generate Error: 1 in %ld \n", ber.generate_error);
+		printf("B Sum Error: 1 in %ld \n", ber.sum_error);
+		printf("B Input Error: 1 in %ld \n", ber.input_error);
 		
 		printf("Total number of adds %lld \n", nr_of_adds);
 		printf("Number of incorrect adds %lld \n", incorrect_adds);

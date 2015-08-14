@@ -15,14 +15,14 @@
 #define ITERATIONS (100000000)
 
 //used in both test_kogge_errors and make_error_model
-#define Q_PROP_ERROR		(20000000)
-#define Q_GEN_ERROR			(20000000)
-#define Q_SUM_ERROR			(10000000)
-#define Q_INPUT_ERROR	 	(10000000)
-#define B_PROP_ERROR		(1000000000)
-#define B_GEN_ERROR			(1000000000)
-#define B_SUM_ERROR			(1000000000)
-#define B_INPUT_ERROR		(1000000000)
+#define Q_PROP_ERROR		(200000)
+#define Q_GEN_ERROR			(200000)
+#define Q_SUM_ERROR			(100000)
+#define Q_INPUT_ERROR	 	(100000)
+#define B_PROP_ERROR		(10000000)
+#define B_GEN_ERROR			(10000000)
+#define B_SUM_ERROR			(10000000)
+#define B_INPUT_ERROR		(10000000)
 #define Q_STABLE_MULT		(1)
 #define Q_ONE_TWO_PROB		(4)
 #define INPUT_SIZE			(31)
@@ -84,7 +84,7 @@ void test_propgen(){
 
 void test_kogge_stone(int input1, int input2,int mode){
 	std::default_random_engine generator(time(0));
-    std::uniform_int_distribution<int> distribution(0, pow(2,31));
+    std::uniform_int_distribution<int> distribution(0, pow(2,INPUT_SIZE));
     unsigned int i1,i2,sum, minus;
     error_rates ber = {};
     error_rates qer = {};
@@ -280,7 +280,7 @@ int main(int argc, char *argv[]){
 		test_kogge_stone(atoi(argv[1]), atoi(argv[2]), 1);
 	else
 		test_kogge_stone(0,0,0);
-	//test_kogge_error();
+	// test_kogge_error();
 	 make_error_model();
 
 

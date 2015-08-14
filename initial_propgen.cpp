@@ -77,11 +77,10 @@ initial_propgen_result initial_propgen::compute(int input1, int input2, int base
 	return result;
 }
 
-int initial_propgen::q_add_variable_noise(int input, int error_prob, int o_t_prob){
-	std::uniform_int_distribution<int> error_distribution(1, error_prob);
-	std::uniform_int_distribution<int> stable_distribution(1, qer.stable_multiplier);
+int initial_propgen::q_add_variable_noise(int input, long error_prob, int o_t_prob){
+	std::uniform_int_distribution<long> error_distribution(1, error_prob);
+	std::uniform_int_distribution<long> stable_distribution(1, qer.stable_multiplier);
 	std::uniform_int_distribution<int> one_two_prob(1, o_t_prob);
-
 	if(error_distribution(generator) == 1){
 		switch(input){
 			case 0 : 
@@ -119,8 +118,8 @@ int initial_propgen::q_add_variable_noise(int input, int error_prob, int o_t_pro
 	return input;
 }
 
-int initial_propgen::b_add_variable_noise(int input, int error_prob){
-	std::uniform_int_distribution<int> error_distribution(1, error_prob);
+int initial_propgen::b_add_variable_noise(int input, long error_prob){
+	std::uniform_int_distribution<long> error_distribution(1, error_prob);
 	if(error_distribution(generator) == 1){
 		if(input == 0){
 			input = 2;
@@ -136,8 +135,8 @@ int initial_propgen::b_add_variable_noise(int input, int error_prob){
 	return input;
 }
 
-int initial_propgen::add_propgen_noise(int input, int error_prob){
-	std::uniform_int_distribution<int> error_distribution(1, error_prob);
+int initial_propgen::add_propgen_noise(int input, long error_prob){
+	std::uniform_int_distribution<long> error_distribution(1, error_prob);
 	if(error_distribution(generator) == 1){
 		if(input == 1){
 			input = 0;
